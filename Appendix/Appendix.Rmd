@@ -1,0 +1,159 @@
+---
+title: "Malaria Project Appendix"
+author: "Chong Kim"
+date: "11/19/2017"
+output: html_document
+---
+
+## Appendix
+
+### A.1 Models and Equations
+
+#### A.1.1 Exponential Decay Model for ITN and IRS protection
+
+We assumed an exponential decay model for the IRS and ITN with the following model:
+
+$$
+A = Pe^{(-k\times time)}
+$$
+Where $A$ indicates the protection percentage at the calculated time, P is the original protection at time 0 (i.e. 1) and $k$ is the proportionality constant that determines the rate of decay. 
+
+### A.2 Figures
+
+#### A.2.1 Average Weather Values Over Time
+
+```{r othervars, echo=FALSE}
+
+shinyAppDir(
+  "./weather",
+  options = list(
+    width = "100%", height = 610
+  )
+)
+
+```
+
+
+#### A.2.2 Malaria Incidence Change over Time Using ggAnimate
+
+<center> ![](mb_inc_animated.gif) </center>
+
+<h1 class="small">**Appendix Figure 2.2.** The figure is a graphics interchange format (GIF) figure that indicates the changing malaria incidence per 1000 from 2010 to 2017. There isn't much variability over time. Incidence rates are below ... per 1000 people over the range of 2010 to 2017. </h1> 
+
+#### A.2.3 Impact of IRS and ITN protection on Malaria Incidence stratified by Region and Province
+
+```{r malinc, echo=FALSE, message=FALSE, fig.width=10}
+final <- readRDS("/home/ck1/Documents/PythonR/Project/data/final.rds")
+
+#protection variable
+ggarrange(
+  ggplot(final, aes(x = ITNprotn, y = inc1k, colour = Region, group = Region)) +
+    geom_smooth() +
+    xlab("ITN Protection") +
+    ylab("Incidence per 1000") ,
+  ggplot(final, aes(x = IRSprotn, y = inc1k, colour = Region, group = Region)) +
+    geom_smooth() +
+    xlab("IRS Protection") +
+    ylab("Incidence per 1000") ,
+  labels = c("A","B") ,
+  common.legend = TRUE, legend = "bottom"
+)
+```
+
+#### A.2.4 Fixed Effect Estimates Coefficient Plot from Generalized Linear Mixed Model with Lapalce Approximation
+
+```{r glmer_coefplot, echo=FALSE, warning=FALSE}
+plot_models(gm3a, gm3b, gm3c, gm3d, std.est = "std2", 
+            legend.title = "Model Numbers", 
+            m.labels = c("Model 1", "Model 2", "Model 3","Model 4")
+            )
+```
+
+
+#### A.2.5 MCMCglmm Diagnoses Trace Plot
+```{r trace, echo = FALSE}
+par(mfrow=c(2,2))
+plot(gm3dmcmix, ask=F, auto.layout=F)
+```
+
+#### A.2.6 MCMCglmm Diagnoses Autocorrelation Plot
+```{r acfs, echo = FALSE}
+plot.acfs <- function(x) {
+  n <- dim(x)[2]
+  par(mfrow=c(ceiling(n/6),2), mar=c(3,2,3,0))
+  for (i in 1:n) {
+    acf(x[,i], lag.max=100, main=colnames(x)[i])
+    grid()
+  }
+}
+plot.acfs(gm3dmc[[1]]$Sol)
+```
+
+#### A.2.7 MCMCglmm Diagnoses Gelman-Rubin Criterion Plot
+```{r gelman, echo = FALSE}
+par(mfrow=c(2,2))
+gelman.plot(gm3dmcmix, auto.layout = F)
+#gelman.diag(gm3dmcmix)
+
+```
+
+### A.3 Tables
+
+#### A.3.1 GLMM Quantiles for Each Variables
+```{r quant_vars, echo = FALSE}
+pander(summary(gm3dmcmix)$quantiles)
+```
+
+
+
+### A.4 Code
+
+#### A.4.1 Malaria Incidence Change over time Code
+
+```{r mal_inc_sp, eval=FALSE}
+library(zoo)
+library(xts)
+library(tidyr) # for spread function
+
+md_yr <- final %>%
+  select(DISTCODE, Epiyear, inc1k) %>%
+  group_by(DISTCODE, Epiyear) %>%
+  summarize_all(funs(mean)) 
+
+# long to wide
+temp <- spread(md_yr, Epiyear, inc1k)
+poly2 <- poly1
+# merge the yearly information
+poly2@data <- left_join(poly2@data, temp)
+rownames(poly2@data) <- poly2@data$DISTCODE
+
+# get rid of unnecessary columns
+poly2@data$SP_ID <- NULL; poly2@data$DISTCODE <- NULL
+
+# Function to create appropriate column name for the spplot
+spcol <- function(num) {
+  x = c()
+  for(i in 1:num) {
+    x[i] = paste0("X",round(((i-1)*365.2422) + 1, 0))
+  }
+  x
+}
+x <- spcol(8)
+colnames(poly2@data) <- x
+
+# plot spplot
+spplot(poly2, names.attr = unique(md_yr$Epiyear), as.table = TRUE, colorkey = TRUE)
+```
+
+#### A.4.2 Prior Specificaiton for the Bayesian GLMM
+
+```{r prior_code, eval=FALSE}
+prior <- list(
+  B = list(V = diag(12)*1e7, mu =c(0,0,0,0,0,0,0,0,1,0,0,0)), # fix the beta value for the log(u5total) to be 1 s.t. it acts as an offset
+  R = list(V = 1, n = 0, fix = 1),
+  G = list(
+    G1 = list(V = 1, n = 1)
+  ))
+prior$B$V[9,9] <- 1e-7 # replace u5total (offset) variance to 0 so that it's stuck at 0
+```
+
