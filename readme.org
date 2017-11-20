@@ -1,4 +1,4 @@
-#+TITLE: Using MCMCglmm to implement lme4-like Bayesian mixed-effects models (DRAFT)
+#+TITLE: Effect of Malaria Interventions and Weather on Malaria Incidence in Mozambique)
 #+AUTHOR: Chong Hoon Kim
 #+EMAIL: chong.kim@ucdenver.edu
 #+DATE: 11/20/2017
