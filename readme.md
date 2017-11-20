@@ -1,0 +1,26 @@
+#+TITLE: Using MCMCglmm to implement lme4-like Bayesian mixed-effects models (DRAFT)
+#+AUTHOR: Chong Hoon Kim
+#+EMAIL: chong.kim@ucdenver.edu
+#+DATE: 11/20/2017
+#+HTML_HEAD: <style>#content {width: 850px; margin-left: 50px; margin-bottom: 40px; padding: 20px; background: #fff;}
+#+HTML_HEAD: body {background: #eee;}
+#+HTML_HEAD: #postamble {margin-left: 50px; background: #eee;}</style>style>
+#+PROPERTY: header-args:R :session *R* :tangle yes :comments no :eval no-export
+
+# TODO About this document.
+# - disclaimer: Many questions will remain open but at least this tutorial will put you in the position to ask those questions.
+# - feel free to use issue tracker and PRs are welcome
+# - reference to tangled code
+
+
+
+* README
+
+This repository contains the codes necessary to produce an interactive shiny document that can be found at X (upload into shinyapps.io). The original purpose of the document was to serve as the final project for FS 2017 Python & R course. The final project entails:
+
+1. Utilizing various data management/wrangling principles to modify the data for mixed model analysis.
+2. Produce spatio-temporal visualizations.
+3. Conduct analysis to determine the impact of interventions and weather variable on malaria incidence in Mozambique.
+4. Produce a document that incorporates what has been learned during the course.
+
+
