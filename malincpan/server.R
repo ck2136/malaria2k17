@@ -34,7 +34,7 @@ shinyServer(function(input, output) {
     theGraph <- ggplot(final) +
       geom_smooth(aes(x = ITNprotn, y = inc1k, color = "ITN")) +
       geom_smooth(aes(x = IRSprotn, y = inc1k, color = "IRS")) +
-      xlab("ITN or IRS Protection (%)") +
+      xlab("ITN or IRS Protection") +
       ylab("Incidence per 1000") + labs(color = "IRS or ITN")
 
     ggplotly(theGraph) 

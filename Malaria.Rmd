@@ -122,7 +122,7 @@ as indicated in [@hadfield2012mcmcglmm]. The $\beta_0$ are the prior means for t
 
 ## Result
 
-### Average ITN and IRS Protection (%) Over Time
+### Average ITN and IRS Protection Over Time
 
 ```{r ITN_IRS, echo=FALSE}
 
@@ -161,19 +161,19 @@ shinyAppDir(
 <h1 class="small">**Figure 3.** The impact of weather variables on the incidence of malaria. Through the drop-down options, one can choose the impact of 1. Daily rainfall (mm), 2. Daily average temperature (C), 3. Relative humidity (%), 4. Saturdation vapor pressure deficit (mmHg), and 5. Surface barometric pressure (hPa) on malaria incidence. The figure also depicts the 'lagged' effect of each variables. Specifically, The impact of each weather variables with regards to 2 week, 4 week, and 8 week lagged (and No lag) effect on malaria incidence is plotted. </h1> 
 
 #### Average Daily Temperature 
-Based on the smoothed curve (via generalized additive model) displayed in Figure 3, as the average daily temperature (C$^\circ$/week) increases, there was an increasing trend up to 27 C$^\circ$ and then the incidence declines (for all lagged and non-lagged temperature variables) somewhat like a quadratic relationship is displayed. 
+Based on the smoothed curve (via generalized additive model) displayed in Figure 3, as the average daily temperature (C$^\circ$/week) increases, there was an increasing trend up to 27 C$^\circ$ and then the incidence declines (for all lagged and non-lagged temperature variables) somewhat like a quadratic relationship is displayed. The confidence intervals indicate that the estimated effect of daily average temperature from 20 (C$^\circ$/week) to 28 (C$^\circ$/week) is relatively consistent compared to that of the effect at the lower and upper range of temperature values (i.e. 15 (C$^\circ$/week) < and > 28 (C$^\circ$/week)).
 
-#### Average daily rainfall 
-The average daily rainfall (mm/per week) on the other hand seemed to display a positive linear relationship with malaria incidence. The incidence of malaria was  greatest when the (lagged and non-lagged) rainfall amount was at the highest. 
+#### Total weekly rainfall 
+The total weekly rainfall (mm/per week) on the other hand seemed to display a positive linear relationship with malaria incidence. The incidence of malaria was  greatest when the (lagged and non-lagged) rainfall amount was at the highest. The 95% confidence interval indicates that the estimated effect of total weekly rainfall on malaria incidence has low variability in the lower range (< 400 mm) but exhibits higher variaiblity towards larger values of rainfall ( > 400 mm).
 
 #### Average relative humidity 
-Accounting for no lag, 2 weeks lag and 4 weeks lag effect on malaria incidence, as the average relative humidity (%/week) increased from 20% to 90%, the incidence of malaria seemed to increase up to approximately 40 cases/1000 populaiton. However, the relationship between malaria incidence reversed from 90% onwards, as the relative humidity increases a sharp decline in malaria incidence is exhibited. Additionally, when accounting for a lag of 8 weeks the trend seemed to be increasing from 20% to 40% then the incidence of malaria seemed to drop with greater percentage of relative humidity steadily up to 90% then a steep drop in malaria incidence is exhibited similar to the effect of shorter lag periods described above.
+Accounting for no lag, 2 weeks lag and 4 weeks lag effect on malaria incidence, as the average relative humidity (%/week) increased from 20% to 90%, the incidence of malaria seemed to increase up to approximately 40 cases/1000 populaiton. However, the relationship between malaria incidence reversed from 90% onwards, as the relative humidity increases a sharp decline in malaria incidence is exhibited. Additionally, when accounting for a lag of 8 weeks the trend seemed to be increasing from 20% to 40% then the incidence of malaria seemed to drop with greater percentage of relative humidity steadily up to 90% then a steep drop in malaria incidence is exhibited similar to the effect of shorter lag periods described above. The 95% confidence intervals indicate that the impact of average relative humidity on malaria incidence has greater variability at lower values of humidity (< 40%). 
 
 #### Average saturation vapor pressure deficit
-
+As average saturation vapor pressure (mmHg/week) increases up to 17 mmHg, there is a steady increase in malaria incidence (especially accounting for a 8 week lag), then as saturation vapor pressure increases up to 30 mmHg malaria incidence seems to decreases steadily. The concave down relationship is displayed for all saturation vapor effect (i.e. no, 2 weeks, 4 weeks, and 8 weeks lag) on malaria incidence. Similar to the effect of average weekly rainfall, the 95% CI of the effect of saturation vapor pressure deficit (mmHg) on malaria incidence has small variability at lower values ( < 20mmHg) but has greater variability at larger values ( > 20 mmHg).
 
 #### Average surface barometric pressure
-
+The average surface barometric pressure (hPa/week) displays a highly non-linear relationship with malaria incidence. There is an initial steep increase in malaria as the pressure increases from 870 to 912 then a steep decline afterwards. Overall a fluctuating (i.e. sinusoidal)  relationship is displayed. There is very little variability in in terms of the effect of surface barometric pressure on malaria incidence except at the upper limite (1015 hPa < ).
 
 ### Impact of Intervention on Malaria Incidence per 1000
 
@@ -186,12 +186,15 @@ shinyAppDir(
   )
 )
 ```
-<h1 class="small">**Figure 4.** The figure indicates the impact of Insecticide Treated Bed Net (ITN) and Indoor Residual Spraying (IRS) protection on malaria incidence. **TEAL :** The impact of ITN protection on malaria incidence. **RED :** The impact of IRS protection on malaria incidence.</h1> 
+<h1 class="small">**Figure 4.** The figure indicates the impact of Insecticide Treated Bed Net (ITN) and Indoor Residual Spraying (IRS) protection on malaria incidence (scaled from 0 to 1, where 1 is 100% protection). **TEAL :** The impact of ITN protection on malaria incidence. **RED :** The impact of IRS protection on malaria incidence.</h1> 
+
+With regards to the effect of ITN protection, there is a concave upwards dip in the lower protection values (i.e. from 0 to 0.3) then afterwards the overall relationsihp between ITN protection and malaria incidence is constant (at 35 cases per 1000 population). 
+Similarly, IRS protection displays a much larger dip and then a steep incline from values 0 to 0.11 (11% IRS protection) then a fluctuating relationship until 75% protection value then as protection increases the incidence decreases steadily (from 0.75 to 1). 
+
+### Generalized Linear Mixed Effect Model Regression Analysis
 
 
-### Generalized Linear Mixed Effect Model Regression Coefficient
-
-
+#### Table 1. GLMM Parameter Estimates with 0, 2, 4, and 8 weeks lagged effect of Weather
 ```{r mcmcresult, echo=FALSE}
 panderOptions('table.split.table', Inf)
 resultab<- cbind(summary(models[[1]])$statistics[,1:2], summary(models[[2]])$statistics[,1:2], summary(models[[3]])$statistics[,1:2], summary(models[[4]])$statistics[,1:2])
@@ -199,7 +202,7 @@ rownames(resultab) <- c("Intercept", "ITN", "IRS", "Avg. Temp (C)", "Avg Rain (m
 colnames(resultab) <- c("M1 mean", "M1 SD", "M2 mean", "M2 SD", "M3 mean", "M3 SD", "M4 mean", "M4 SD")
 pander(resultab)
 ```
-<h1 class="small">**Figure 4.** The figure indicates the impact of Insecticide Treated Bed Net (ITN) and Indoor Residual Spraying (IRS) protection on malaria incidence. **TEAL :** The impact of ITN protection on malaria incidence. **RED :** The impact of IRS protection on malaria incidence.</h1> 
+<h1 class="small">\* M1: No lagged effect of weather variables; M2: 2 week lagged effect of weather variables; M3: 4 week lagged effect of weather variables; M4: 8 week lagged effect of weather variables.</h1> 
 
 
 ```{r coefplot, echo = FALSE, fig.align='center', fig.width=7, fig.asp=0.8}
@@ -215,9 +218,9 @@ plot_mcmod <- function(y) {
   
   # creating plot scheme
   n <- dim(x$statistics)[1]
-  par(mar=c(2, 10, 4, 1))
+  par(mar=c(4, 10, 4, 1))
   plot(x$statistics[,1], n:1,
-       yaxt="n", ylab="",
+       yaxt="n", ylab="", xlab = "Parameter estimates",
        xlim=range(x$quantiles)*1.2,
        pch=19,
        main="Posterior means and 95% credible intervals", col=c("red"))
@@ -237,10 +240,20 @@ par(mfrow=c(1,1))
 plot_mcmod(models)
 ```
 <h1 class="small">**Figure 4.** The figure indicates the impact of Insecticide Treated Bed Net (ITN) and Indoor Residual Spraying (IRS) protection on malaria incidence. **TEAL :** The impact of ITN protection on malaria incidence. **RED :** The impact of IRS protection on malaria incidence.</h1> 
-## Conclusion
+
+Accounting for the between-district variability (as random effects), there wasn't a big difference in the effect of weather and interventions across the 4 models that also accounted for different levels of lagged effects of weather variables. Based on the model that incorporates the effect of 8 weeks lagged weather variables impact on malaria incidence (Model 4), there was a statistically significant effect of average daily temperature, average relative humidity, and saturation vapor pressure deficit on the incidence of malaria per 1000. Specifically, on average effect of a unit increase in the average daily temperature (in C$^\circ$) is `r round(exp(summary(models[[4]])$statistics[,1][['scale(tavg_lag_8)']]),2)` times greater rate of malaria incidence per 1000 whereas a unit increase in the average relative humidity (in %/week), average saturation vapor pressure deficit (mmHg/week) is  `r  round(exp(summary(models[[4]])$statistics[,1][['scale(rh_lag_8)']]),2)` and `r round(exp(summary(models[[4]])$statistics[,1][['scale(sd_lag_8)']]),2)` times smaller rate of malaria incidence per 1000, respectively. The rate of malaria incidence did not have a statistically significant association with ITN and IRS over time as indicated in FIgure 4.  
+
+## Conclusion & Discussion
+
+We have shown that there are lagged effects of weather factors on the inicidence of malaria in Mozambique. Results from the generalized linear mixed model analysis have shown that there were significant associations between malaria incidence and weather variables, however there were no statistically significant association between ITN and IRS interventions with the incidences. 
+
+  Our results here support previous studies that linked malaria incidence to climate and weather phenomena, but also indicates that there potentially is no effect of ITN and IRS interevention effects on malaria incidence. However, this study should not be interpreted as an ultimatum on the effect of of the weather and intervention on the incidence of malaria due to the lack of other possible modeling approaches that have been taken in this analysis. Specifically there are other potential factors (confounders) that may affect both exposure and outcome that are were not included in the analysis such as urbanicity of the districts, vegetation type and grwoth stage[@diggle2007spatial], health service infrastucture of district, and many more. Another limitation to the study is that the approach for analysis utilized a relatively simple model that incorporated only one random effects term (district) with one interaction effect (time and intervention) whereas other effects such as region could be incorporated as another heirarchical cluster. Our approach also did not allow for potential non-linear effects of weather and intervention on malaria incidence, which further analyses should explore. 
+  With regards to future analyses, the three way interaction between weather, time, and intervention should be explored, in addition to incorporating random slopes and intercepts for the three variables. Additionally, other potential models that should be explored further are self-organizing maps (SOMs) [@ikeda2017seasonally], gaussian point process [@diggle2007spatial, @diggle2013statistical], and machine learning methods (e.g. Kernal Principal COmponent Analysis and Support Vector Machines [@gokaraju2011machine]).
 
 
+## Acknowledgement
 
+The authors thank Dr. Kathryn Colborn and Dr. Debashis Ghosh for their amazing teaching in the Python & R Programming in Data Science Fall 2017 (BIOS 6640) course. This work was not technically supported by any organization but practically the Department of Pharmaceutical Sciences (DOPS) and Department of Biostatistica and Bioinformatics (DOBB) has provided numerous educational supplies and courses that have allowed for this project to be completed as such.  
 
 
 ## References

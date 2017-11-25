@@ -42,7 +42,7 @@ shinyServer(function(input, output) {
       y="Saturation Vapor\n Pressure Deficit (mmHg)" 
     }
     if(input$vars == "psfc") {
-      y="Surface Barometric\n Pressure (mmHg)"
+      y="Surface Barometric\n Pressure (hPa)"
     }
     y
   })
