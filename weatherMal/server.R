@@ -21,7 +21,7 @@ library(ggpubr)
 library(plotly)
 
 # load data
-final <- readRDS("/home/ck1/Documents/PythonR/Project/data/final.rds")
+final <- readRDS("./data/final.rds")
 
 
 # Define server logic required to draw a histogram

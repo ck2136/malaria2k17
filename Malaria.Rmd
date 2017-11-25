@@ -2,11 +2,22 @@
 title: "R & Python Final Project"
 author: "Chong Kim"
 date: "10/29/2017"
-output: 
-  html_document:
-bibliography: bibliography.bib
+output:
+  html_document: null
 csl: science.csl
+resource_files:
+- data/final.rds
+- data/Moz_admin2.dbf
+- data/Moz_admin2.shp
+- data/Moz_admin2.shx
+- IntProt/server.R
+- IntProt/ui.R
+- malincpan/server.R
+- malincpan/ui.R
+- weatherMal/server.R
+- weatherMal/ui.R
 runtime: shiny
+bibliography: bibliography.bib
 ---
 
 ```{r setup, include=FALSE}

@@ -22,8 +22,8 @@ library(ggiraph)
 library(gridExtra)
 
 # load data
-final <- readRDS("/home/ck1/Documents/PythonR/Project/data/final.rds")
-poly1 <- readShapePoly('/home/ck1/Documents/PythonR/Project/data/Moz_admin2.shp', IDvar="DISTCODE")
+final <- readRDS("./data/final.rds")
+poly1 <- readShapePoly('./data/Moz_admin2.shp', IDvar="DISTCODE")
 
 
 # Coverage of ITN
