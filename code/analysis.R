@@ -19,7 +19,7 @@ library(future) # for parallelizing brms
 library(pander) # for table
 library(sjPlot) # for glmer plotting
 library(splines) # spline term for time
-
+library(coefplot2)
 # Load dataset
 final <- readRDS("~/Documents/PythonR/Project/data/final.rds")
 # Add time
@@ -118,12 +118,13 @@ gm2d <- glmer(cases ~ scale(tavg_lag_4) + scale(raintot_lag_4) + scale(rh_lag_4)
 
 prior <- list(
   B = list(V = diag(12)*1e7, mu =c(0,0,0,0,0,0,0,0,1,0,0,0)), # fix the beta value for the log(u5total) to be 1 s.t. it acts as an offset
-  R = list(V = 1, n = 1, fix = 1),
+  R = list(V = 1, nu = 0.002), # here we don't fix the residual error portion 
   G = list(
     G1 = list(V = 1, n = 1)
   ))
 prior$B$V[9,9] <- 1e-7 # replace u5total (offset) variance to 0 so that it's stuck at 0
 prior # check the matrices
+
 
 
 ### Model 3a: Regression with both intervention and weather variables no lag
@@ -134,7 +135,7 @@ gm3amc <- mclapply(1:4, function(i) {
   MCMCglmm(cases ~ 
              scale(ITNprotn) + scale(IRSprotn) + scale(tavg) + scale(raintot) + scale(rh) + scale(sd) + scale(psfc) + log(u5total) + scale(ITNprotn)*time + scale(IRSprotn)*time + time,
            random = ~District, family = "poisson", data = final[complete.cases(final),],
-           prior = prior)
+           prior = prior, pr = TRUE)
   # prior  = prior.m5,
   # thin   = 20,
   # burnin = 3000,
@@ -150,7 +151,7 @@ gm3bmc <- mclapply(1:4, function(i) {
   MCMCglmm(cases ~ 
              scale(ITNprotn) + scale(IRSprotn) + scale(tavg_lag_2) + scale(raintot_lag_2) + scale(rh_lag_2) + scale(sd_lag_2) + scale(psfc_lag_2) + log(u5total) + scale(ITNprotn)*time + scale(IRSprotn)*time + time,
            random = ~District, family = "poisson", data = final[complete.cases(final),],
-           prior = prior)
+           prior = prior, pr = TRUE)
   # prior  = prior.m5,
   # thin   = 20,
   # burnin = 3000,
@@ -167,7 +168,7 @@ gm3cmc <- mclapply(1:4, function(i) {
   MCMCglmm(cases ~ 
              scale(ITNprotn) + scale(IRSprotn) + scale(tavg_lag_4) + scale(raintot_lag_4) + scale(rh_lag_4) + scale(sd_lag_4) + scale(psfc_lag_4) + log(u5total) + scale(ITNprotn)*time + scale(IRSprotn)*time + time,
            random = ~District, family = "poisson", data = final[complete.cases(final),],
-           prior = prior)
+           prior = prior, pr = TRUE)
   # prior  = prior.m5,
   # thin   = 20,
   # burnin = 3000,
@@ -184,7 +185,7 @@ gm3dmc <- mclapply(1:4, function(i) {
   MCMCglmm(cases ~ 
              scale(ITNprotn) + scale(IRSprotn) + scale(tavg_lag_8) + scale(raintot_lag_8) + scale(rh_lag_8) + scale(sd_lag_8) + scale(psfc_lag_8) + log(u5total) + scale(ITNprotn)*time + scale(IRSprotn)*time + time,
            random = ~District, family = "poisson", data = final[complete.cases(final),],
-           prior = prior)
+           prior = prior, pr = TRUE)
   # prior  = prior.m5,
   # thin   = 20,
   # burnin = 3000,
@@ -192,8 +193,10 @@ gm3dmc <- mclapply(1:4, function(i) {
 }, mc.cores=4)
 
 
-
-
+# Posterior Distribution of Random Effects
+# condtiional mode estimates for the random effects from model 4 chain 1
+lapplY(colnames(gm3dmc[[2]]$Sol)[grepl("^District.*", colnames(gm3dmc[[2]]$Sol))], function(x) plot(gm3dmc[[2]]$Sol[, x]))
+# This will give all 140 districts' conditional mode... CAUTION.
 
 #####################
 # Regression Results# 
@@ -205,7 +208,13 @@ plot_models(gm3a, gm3b, gm3c, gm3d, std.est = "std2",
             m.labels = c("Model 1", "Model 2", "Model 3","Model 4")
             )
 
-# MCMC models 
+# Extract the fixed effect summaries from all of the 4 chains of MCMC 
+
+# chains failed for model 1 and 4 so remove from list
+gm3amc[[1]] <- NULL
+gm3dmc[[1]] <- NULL
+gm3bmc[[2]] <- NULL
+
 save_mod <- function(y) {
   m1 <- lapply(get(y), function(m) m$Sol)
   m1 <- do.call(mcmc.list, m1)
@@ -215,8 +224,46 @@ save_mod <- function(y) {
 
 # all chains stored here first 1-4 is nolag, then 2, 4, and then 8 week lags
 models <- lapply(ls()[grepl("mc$",ls())], save_mod)
-summary(models[[1]])
+summary(models[[1]])$statistics[1:12,1]
+summary(models[[1]])$statistics[1:12,]
+summary(gm3dmc[[1]])
+dim(summary(models[[1]])$statistics)
+summary(gm3dmc[[1]])$solutions
+rownames(summary(gm3dmc[[1]])$solutions)
+# Function to plot just fixed effects estimates
+plot_mcfix <- function(y) {
+  
+  # extract each of the MCMC models from list and get parameter estimates
+  x <- summary(y[[1]])
+  x2 <- summary(y[[2]])
+  x3 <- summary(y[[3]])
+  x4 <- summary(y[[4]])
+  
+  # creating plot scheme
+  #n <- dim(x$statistics)[1]
+  n <- 12
+  par(mar=c(4, 10, 4, 1))
+  plot(x$statistics[1:12,1], n:1,
+       yaxt="n", ylab="", xlab = "Parameter estimates",
+       xlim=c(-5,3),
+       pch=19,
+       main="Posterior means and 95% credible intervals", col=c("red"))
+  points(x2$statistics[1:12,1], n:1, pch=19, col = "blue")
+  points(x3$statistics[1:12,1], n:1, pch=19, col = "green")
+  points(x4$statistics[1:12,1], n:1, pch=19, col = "yellow")
+  grid()
+  axis(2, at=n:1, 
+       rownames(x$statistics)[1:12] <- c("Intercept", "ITN", "IRS", "Avg. Temp (C)", "Avg Rain (mm/week)", "Rel. Humidity (%)", "Vapor Pressure (mmHg)","Surface Pressure (hPa)", "Under 5 Total", "Time", "ITN:Time", "IRS:Time") 
+       ,
+       las=2) # originally rownames(x$statistics)
+  arrows(x$quantiles[1:12,1], n:1, x$quantiles[1:12,5], n:1, code=0)
+  abline(v=0, lty=2)
+  legend("bottomleft", legend = c("Model 1", "Model 2", "Model 3", "Model 4"), lty = c(1,2,3,4), col = c("red","blue","green","yellow"))
+}
 
+plot_mcfix(models)
+
+# Function to plot all fixed and random effects estimates
 plot_mcmod <- function(y) {
   
   # extract each of the MCMC models from list and get parameter estimates
@@ -237,7 +284,10 @@ plot_mcmod <- function(y) {
   points(x3$statistics[,1], n:1, pch=19, col = "green")
   points(x4$statistics[,1], n:1, pch=19, col = "yellow")
   grid()
-  axis(2, at=n:1, rownames(x$statistics) <- c("Intercept", "ITN", "IRS", "Avg. Temp (C)", "Avg Rain (mm/week)", "Rel. Humidity (%)", "Vapor Pressure (mmHg)","Surface Pressure (hPa)", "Under 5 Total", "Time", "ITN:Time", "IRS:Time") , las=2) # originally rownames(x$statistics)
+  axis(2, at=n:1, 
+       rownames(x$statistics) #<- c("Intercept", "ITN", "IRS", "Avg. Temp (C)", "Avg Rain (mm/week)", "Rel. Humidity (%)", "Vapor Pressure (mmHg)","Surface Pressure (hPa)", "Under 5 Total", "Time", "ITN:Time", "IRS:Time") 
+       ,
+       las=2) # originally rownames(x$statistics)
   arrows(x$quantiles[,1], n:1, x$quantiles[,5], n:1, code=0)
   abline(v=0, lty=2)
   legend("bottomleft", legend = c("Model 1", "Model 2", "Model 3", "Model 4"), lty = c(1,2,3,4), col = c("red","blue","green","yellow"))
@@ -246,14 +296,19 @@ plot_mcmod <- function(y) {
 plot_mcmod(models)
 
 save.image(file='appendix.RData') # save the data to the environment to input into the shiny document
-save("models", file = "analysis.RData")
+save(list = c("models","model_ref", "retab"), file = "analysis.RData")
 
 
 ### Table of the 4 models
-resultab<- cbind(summary(models[[1]])$statistics[,1:2], summary(models[[2]])$statistics[,1:2], summary(models[[3]])$statistics[,1:2], summary(models[[4]])$statistics[,1:2])
+resultab<- cbind(summary(models[[1]])$statistics[1:12,1:2], summary(models[[2]])$statistics[1:12,1:2], summary(models[[3]])$statistics[1:12,1:2], summary(models[[4]])$statistics[1:12,1:2])
 rownames(resultab) <- c("Intercept", "ITN", "IRS", "Avg. Temp (C)", "Avg Rain (mm/week)", "Rel. Humidity (%)", "Vapor Pressure (mmHg)","Surface Pressure (hPa)", "Under 5 Total", "Time", "ITN:Time", "IRS:Time")
 colnames(resultab) <- c("M1 mean", "M1 SD", "M2 mean", "M2 SD", "M3 mean", "M3 SD", "M4 mean", "M4 SD")
 pander(resultab)
+
+### Need random effects also
+retab <- rbind(summary(gm3dmc[[1]])$Gcovariances, summary(gm3dmc[[1]])$Rcovariances)
+pander(retab) 
+
 
 
 exp(summary(models[[4]])$statistics[,1][4]) # tavg
@@ -288,8 +343,36 @@ coefplot2(list("GLMER 1" = gm3a,
      legend=TRUE,
      legend.x = "left")
 
-coefplot2(list())
+coefplot2(
+  gm3dmc[[2]], intercept = TRUE,
+  legend =TRUE
+)
 
+
+## Get Random Effects Estimates
+# function to extract the randomeffects estimates
+save_ref <- function(y) {
+  m1 <- lapply(get(y), function(m) m$VCV)
+  m1 <- do.call(mcmc.list, m1)
+  return(m1)
+}
+model_ref <- lapply(ls()[grepl("mc$",ls())], save_ref)
+
+
+
+# random effects prediction interval plot
+sjp.glmer(gm3d,
+          facet.grid = FALSE,
+          sort.est = "sort.all",
+          y.offset = .4)
+
+coefplot2(list(glmer0 = gm3a,
+               glmer2 = gm3b,
+               glmer4 = gm3c,
+               glmer8 = gm3d
+               ),
+          merge.names = FALSE, intercept = TRUE,
+          legend.x = "right", legend=TRUE)
 
 ####################
 #### MCMC DIAGNOSES#
@@ -310,8 +393,7 @@ plot.acfs(gm3dmc[[1]]$Sol)
 par(mfrow=c(2,2))
 gelman.plot(gm3dmcmix, auto.layout = F)
 gelman.diag(gm3dmcmix)
-plot(gm3dmcmix, ask=F, auto.layout=T)
-
+plot(gm3dmcmix, ask=F, random = TRUE, auto.layout=T)
 # Check Trace for Random Effects
 print(xyplot(as.mcmc(gm3dmc[[1]]$VCV), layout=c(2,1)))
 print(xyplot(as.mcmc(gm3dmc[[2]]$VCV), layout=c(2,1)))

@@ -208,18 +208,23 @@ Similarly, IRS protection displays a much larger dip and then a steep incline fr
 #### Table 1. GLMM Parameter Estimates with 0, 2, 4, and 8 weeks lagged effect of Weather
 ```{r mcmcresult, echo=FALSE}
 panderOptions('table.split.table', Inf)
-resultab<- cbind(summary(models[[1]])$statistics[,1:2], summary(models[[2]])$statistics[,1:2], summary(models[[3]])$statistics[,1:2], summary(models[[4]])$statistics[,1:2])
+resultab<- cbind(summary(models[[1]])$statistics[1:12,1:2], summary(models[[2]])$statistics[1:12,1:2], summary(models[[3]])$statistics[1:12,1:2], summary(models[[4]])$statistics[1:12,1:2])
 rownames(resultab) <- c("Intercept", "ITN", "IRS", "Avg. Temp (C)", "Avg Rain (mm/week)", "Rel. Humidity (%)", "Vapor Pressure (mmHg)","Surface Pressure (hPa)", "Under 5 Total", "Time", "ITN:Time", "IRS:Time")
 colnames(resultab) <- c("M1 mean", "M1 SD", "M2 mean", "M2 SD", "M3 mean", "M3 SD", "M4 mean", "M4 SD")
 pander(resultab)
 ```
 <h1 class="small">\* M1: No lagged effect of weather variables; M2: 2 week lagged effect of weather variables; M3: 4 week lagged effect of weather variables; M4: 8 week lagged effect of weather variables.</h1> 
 
+#### Table 2. GLMM Variance Component Estimates
+```{r varcomp, echo=FALSE}
+panderOptions('table.split.table', Inf)
+pander(retab)
+```
 
 ```{r coefplot, echo = FALSE, fig.align='center', fig.width=7, fig.asp=0.8}
 
 # plot all 4 MCMC model coefficients
-plot_mcmod <- function(y) {
+plot_mcfix <- function(y) {
   
   # extract each of the MCMC models from list and get parameter estimates
   x <- summary(y[[1]])
@@ -228,35 +233,41 @@ plot_mcmod <- function(y) {
   x4 <- summary(y[[4]])
   
   # creating plot scheme
-  n <- dim(x$statistics)[1]
+  #n <- dim(x$statistics)[1]
+  n <- 12
   par(mar=c(4, 10, 4, 1))
-  plot(x$statistics[,1], n:1,
+  plot(x$statistics[1:12,1], n:1,
        yaxt="n", ylab="", xlab = "Parameter estimates",
-       xlim=range(x$quantiles)*1.2,
+       xlim=c(-5,3),
        pch=19,
        main="Posterior means and 95% credible intervals", col=c("red"))
-  points(x2$statistics[,1], n:1, pch=19, col = "blue")
-  points(x3$statistics[,1], n:1, pch=19, col = "green")
-  points(x4$statistics[,1], n:1, pch=19, col = "yellow")
+  points(x2$statistics[1:12,1], n:1, pch=19, col = "blue")
+  points(x3$statistics[1:12,1], n:1, pch=19, col = "green")
+  points(x4$statistics[1:12,1], n:1, pch=19, col = "yellow")
   grid()
-  axis(2, at=n:1, rownames(x$statistics) <- c("Intercept", "ITN", "IRS", "Avg. Temp (C)", "Avg Rain (mm/week)", "Rel. Humidity (%)", "Vapor Pressure (mmHg)","Surface Pressure (hPa)", "Under 5 Total", "Time", "ITN:Time", "IRS:Time") , las=2) # originally rownames(x$statistics)
-  arrows(x$quantiles[,1], n:1, x$quantiles[,5], n:1, code=0)
+  axis(2, at=n:1, 
+       rownames(x$statistics)[1:12] <- c("Intercept", "ITN", "IRS", "Avg. Temp (C)", "Avg Rain (mm/week)", "Rel. Humidity (%)", "Vapor Pressure (mmHg)","Surface Pressure (hPa)", "Under 5 Total", "Time", "ITN:Time", "IRS:Time") 
+       ,
+       las=2) # originally rownames(x$statistics)
+  arrows(x$quantiles[1:12,1], n:1, x$quantiles[1:12,5], n:1, code=0)
   abline(v=0, lty=2)
   legend("bottomleft", legend = c("Model 1", "Model 2", "Model 3", "Model 4"), lty = c(1,2,3,4), col = c("red","blue","green","yellow"))
 }
 
 
-
 par(mfrow=c(1,1))
-plot_mcmod(models)
+plot_mcfix(models)
 ```
 <h1 class="small">**Figure 4.** The figure indicates the impact of Insecticide Treated Bed Net (ITN) and Indoor Residual Spraying (IRS) protection on malaria incidence. **TEAL :** The impact of ITN protection on malaria incidence. **RED :** The impact of IRS protection on malaria incidence.</h1> 
 
+
 Accounting for the between-district variability (as random effects), there wasn't a big difference in the effect of weather and interventions across the 4 models that also accounted for different levels of lagged effects of weather variables. Based on the model that incorporates the effect of 8 weeks lagged weather variables impact on malaria incidence (Model 4), there was a statistically significant effect of average daily temperature, average relative humidity, and saturation vapor pressure deficit on the incidence of malaria per 1000. Specifically, on average effect of a unit increase in the average daily temperature (in C$^\circ$) is `r round(exp(summary(models[[4]])$statistics[,1][['scale(tavg_lag_8)']]),2)` times greater rate of malaria incidence per 1000 whereas a unit increase in the average relative humidity (in %/week), average saturation vapor pressure deficit (mmHg/week) is  `r  round(exp(summary(models[[4]])$statistics[,1][['scale(rh_lag_8)']]),2)` and `r round(exp(summary(models[[4]])$statistics[,1][['scale(sd_lag_8)']]),2)` times smaller rate of malaria incidence per 1000, respectively. The rate of malaria incidence did not have a statistically significant association with ITN and IRS over time as indicated in FIgure 4.  
+
+The between-district variabilility (Table 2) was 20-folds greater than the residual variance indicating that there was significant district level differences in malaria incidence which was also supported through prediction intervals and profiled zeta pair plots (in Appendix).  
 
 ## Conclusion & Discussion
 
-We have shown that there are lagged effects of weather factors on the inicidence of malaria in Mozambique. Results from the generalized linear mixed model analysis have shown that there were significant associations between malaria incidence and weather variables, however there were no statistically significant association between ITN and IRS interventions with the incidences. 
+We have shown that there are lagged effects of weather factors in addition to significant between-district variability on the inicidence of malaria in Mozambique. Results from the generalized linear mixed model analysis have shown that there were significant associations between malaria incidence and weather variables, however there were no statistically significant association between ITN and IRS interventions with the incidences. 
 
   Our results here support previous studies that linked malaria incidence to climate and weather phenomena, but also indicates that there potentially is no effect of ITN and IRS interevention effects on malaria incidence. However, this study should not be interpreted as an ultimatum on the effect of of the weather and intervention on the incidence of malaria due to the lack of other possible modeling approaches that have been taken in this analysis. Specifically there are other potential factors (confounders) that may affect both exposure and outcome that are were not included in the analysis such as urbanicity of the districts, vegetation type and grwoth stage[@diggle2007spatial], health service infrastucture of district, and many more. Another limitation to the study is that the approach for analysis utilized a relatively simple model that incorporated only one random effects term (district) with one interaction effect (time and intervention) whereas other effects such as region could be incorporated as another heirarchical cluster. Our approach also did not allow for potential non-linear effects of weather and intervention on malaria incidence, which further analyses should explore. 
   With regards to future analyses, the three way interaction between weather, time, and intervention should be explored, in addition to incorporating random slopes and intercepts for the three variables. Additionally, other potential models that should be explored further are self-organizing maps (SOMs) [@ikeda2017seasonally], gaussian point process [@diggle2007spatial, @diggle2013statistical], and machine learning methods (e.g. Kernal Principal COmponent Analysis and Support Vector Machines [@gokaraju2011machine]).
