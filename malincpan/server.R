@@ -1,11 +1,4 @@
-#
-# This is the server logic of a Shiny web application. You can run the 
-# application by clicking 'Run App' above.
-#
-# Find out more about building applications with Shiny here:
-# 
-#    http://shiny.rstudio.com/
-#
+# Impact of Intervention on Malaria Incidence
 
 library(shiny)
 library(lattice) # for graphics 
@@ -21,6 +14,7 @@ library(ggpubr)
 library(plotly)
 library(ggiraph)
 # load data
+setwd("/srv/shiny-server/malaria_2k17")
 final <- readRDS("./data/final.rds")
 
 
